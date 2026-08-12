@@ -5,28 +5,51 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>J7 Web Installer</title>
     <style>
-      :root { color-scheme:light dark; font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif; background:#f2f2f7; color:#1c1c1e }
-      body { max-width:560px; margin:auto; padding:32px 20px 48px }
-      h1 { margin:0; font-size:34px; letter-spacing:-.04em }
-      p { margin:8px 0 28px; color:#636366; line-height:1.45 }
-      main { padding:20px; border-radius:24px; background:rgba(255,255,255,.82); box-shadow:0 12px 40px rgba(0,0,0,.08); backdrop-filter:blur(20px) }
-      button,input { width:100%; box-sizing:border-box; min-height:54px; margin:7px 0; padding:14px 16px; border:0; border-radius:14px; font:inherit }
-      button { background:#007aff; color:white; font-weight:650; cursor:pointer }
-      button:active { transform:scale(.985); background:#0062cc }
-      button:disabled { opacity:.35 }
-      input { background:#e9e9ee; color:#1c1c1e }
-      pre { min-height:110px; margin:14px 0 0; padding:16px; overflow:auto; white-space:pre-wrap; border-radius:14px; background:#1c1c1e; color:#f2f2f7; font:13px/1.45 ui-monospace,SFMono-Regular,monospace }
-      @media (prefers-color-scheme:dark) { :root { background:#000; color:#f5f5f7 } body main { background:#1c1c1e } p { color:#98989d } input { background:#2c2c2e; color:#f5f5f7 } pre { background:#0c0c0d } }
+      :root { color-scheme:dark; font-family:Arial Narrow,"Roboto Condensed","Helvetica Neue",sans-serif; background:#070909; color:#eeeae2; --red:#ed3d2f; --line:rgba(238,234,226,.09) }
+      * { box-sizing:border-box }
+      body { min-height:100vh; margin:0; padding:22px; background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px); background-size:52px 52px }
+      body::before { content:"J7"; position:fixed; right:-4vw; top:5vh; z-index:-1; color:rgba(255,255,255,.025); font-size:min(80vw,520px); font-weight:900; line-height:.8; letter-spacing:-.12em }
+      header,main { width:min(100%,620px); margin:auto }
+      header { display:flex; align-items:center; justify-content:space-between; padding-bottom:20px; border-bottom:1px solid var(--line) }
+      .brand { display:flex; align-items:center; gap:11px; font:700 11px/1 ui-monospace,monospace; letter-spacing:.28em }
+      .mark { color:var(--red); font-size:25px; letter-spacing:-.1em }
+      .code { color:#777; font:10px/1 ui-monospace,monospace; letter-spacing:.18em }
+      main { margin-top:clamp(54px,12vh,110px) }
+      .eyebrow { display:flex; align-items:center; gap:9px; color:#aaa; font:700 10px/1 ui-monospace,monospace; letter-spacing:.2em; text-transform:uppercase }
+      .eyebrow::before { content:""; width:7px; height:7px; background:var(--red) }
+      h1 { max-width:520px; margin:18px 0 12px; font-size:clamp(54px,15vw,96px); line-height:.82; letter-spacing:-.075em; text-transform:uppercase }
+      h1 span { color:var(--red) }
+      .intro { max-width:470px; margin:0 0 34px; color:#aaa; font:600 14px/1.6 ui-monospace,monospace }
+      .panel { position:relative; padding:20px; border:1px solid rgba(238,234,226,.18); background:rgba(7,9,9,.9) }
+      .panel::before { content:"ADB / WEBUSB"; position:absolute; top:-10px; right:14px; padding:4px 8px; background:var(--red); color:#fff; font:700 8px/1 ui-monospace,monospace; letter-spacing:.16em }
+      .step { margin:14px 0 7px; color:#777; font:700 9px/1 ui-monospace,monospace; letter-spacing:.18em; text-transform:uppercase }
+      button,input { width:100%; min-height:58px; padding:16px; border-radius:0; font:700 12px/1 ui-monospace,monospace; letter-spacing:.1em; text-transform:uppercase }
+      button { border:1px solid #eeeae2; background:#eeeae2; color:#070909; cursor:pointer }
+      button:active { background:var(--red); border-color:var(--red); color:#fff }
+      button:disabled { opacity:.3 }
+      input { border:1px solid var(--line); background:#0d1010; color:#aaa; text-transform:none; letter-spacing:0 }
+      pre { min-height:96px; margin:16px 0 0; padding:15px; overflow:auto; white-space:pre-wrap; border:1px solid var(--line); background:#030404; color:#74d9d0; font:12px/1.5 ui-monospace,SFMono-Regular,monospace }
+      @media (min-width:700px) { body { padding:30px } .panel { padding:26px } }
     </style>
   </head>
   <body>
-    <h1>J7 Installer</h1>
-    <p>Connect your phone to the car via USB OTG and close any other ADB apps.</p>
+    <header>
+      <div class="brand"><span class="mark">双</span> SUREIZU</div>
+      <div class="code">SRZ / J7-001</div>
+    </header>
     <main>
-      <button id="connect">Connect to car</button>
+      <div class="eyebrow">Infotainment utility</div>
+      <h1>Install.<br><span>Drive.</span></h1>
+      <p class="intro">A direct, private APK installer for your J7. Connect via USB OTG and close any other ADB apps.</p>
+      <section class="panel">
+      <div class="step">01 — Pair device</div>
+      <button id="connect">Connect to car ↗</button>
+      <div class="step">02 — Select package</div>
       <input id="apk" aria-label="Select APK file" type="file" accept=".apk,application/vnd.android.package-archive" disabled>
-      <button id="install" disabled>Install APK</button>
+      <div class="step">03 — Deploy</div>
+      <button id="install" disabled>Install APK ↗</button>
       <pre id="status" aria-live="polite">Ready.</pre>
+      </section>
     </main>
     <script type="module" src="/src.js"></script>
   </body>
