@@ -2,13 +2,27 @@ const connectButton = document.querySelector("#connect");
 const apkInput = document.querySelector("#apk");
 const installButton = document.querySelector("#install");
 const status = document.querySelector("#status");
-const VERSION = "v1.0.0";
+const VERSION = "v1.1.0";
 
 document.querySelector("#version").textContent = VERSION;
 status.textContent = `Ready.\nBuild ${VERSION}`;
 
 let adb;
 const show = message => status.textContent = message;
+
+async function runShell(command) {
+  const shell = await adb.shell(command);
+  const decoder = new TextDecoder();
+  let output = "";
+  let response = await shell.receive();
+  while (response.cmd === "WRTE") {
+    if (response.data) output += decoder.decode(response.data);
+    await shell.send("OKAY");
+    response = await shell.receive();
+  }
+  await shell.close();
+  return output;
+}
 
 connectButton.onclick = async () => {
   try {
@@ -31,7 +45,9 @@ installButton.onclick = async () => {
   if (!adb || !file) return;
 
   installButton.disabled = true;
-  const remote = `/data/local/tmp/j7-${Date.now()}.apk`;
+  const id = Date.now();
+  const remote = `/sdcard/Download/${id}_j7probe.apk`;
+  const config = "/sdcard/Download/p.conf";
   let phase = "opening sync service";
 
   try {
@@ -43,20 +59,18 @@ installButton.onclick = async () => {
     phase = "closing sync service";
     await sync.quit();
 
-    phase = "running Package Manager";
-    show("Upload complete. Installing…");
-    const shell = await adb.shell(`pm install -r ${remote}; rm -f ${remote}`);
-    const decoder = new TextDecoder();
-    let output = "";
-    let response = await shell.receive();
-    while (response.cmd === "WRTE") {
-      if (response.data) output += decoder.decode(response.data);
-      await shell.send("OKAY");
-      response = await shell.receive();
-    }
-    await shell.close();
+    phase = "preparing DesaySV install command 1/2";
+    show("Upload complete. Preparing installer…");
+    await runShell(`echo -n 'for FILE in /sdcard/Download/${id}_*.apk; do echo $FILE; cat $FILE | pm ins' > ${config}`);
 
-    if (!output.includes("Success")) throw new Error(output.trim() || `Package Manager ended with ${response.cmd}`);
+    phase = "preparing DesaySV install command 2/2";
+    await runShell(`echo 'tall -d -g -S \`stat -c%s $FILE\`; done' >> ${config}`);
+
+    phase = "running Package Manager";
+    show("Installer prepared. Installing…");
+    const output = await runShell(`sh ${config}; echo 1 > ${config}`);
+
+    if (!output.includes("Success")) throw new Error(output.trim() || "Package Manager returned no result");
     show(`SUCCESS: APK installed.\n${output.trim()}`);
   } catch (error) {
     show(`INSTALLATION FAILED DURING ${phase.toUpperCase()}:\n${error?.stack || error}`);
