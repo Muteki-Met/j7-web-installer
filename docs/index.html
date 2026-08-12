@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>J7 Web Installer</title>
+    <style>
+      :root { color-scheme: dark; font-family: system-ui, sans-serif; background:#090d12; color:#d9ffff }
+      body { max-width:560px; margin:auto; padding:24px }
+      h1 { color:#52e5ec; letter-spacing:.08em }
+      button,input { width:100%; box-sizing:border-box; margin:8px 0; padding:16px; font:inherit }
+      button { border:1px solid #52e5ec; background:#10232a; color:#d9ffff; font-weight:700 }
+      button:disabled { opacity:.4 }
+      pre { min-height:120px; padding:14px; white-space:pre-wrap; background:#130c12; border-left:3px solid #e95157 }
+    </style>
+    <script type="module" crossorigin src="./assets/index-BctG1NMU.js"></script>
+  </head>
+  <body>
+    <h1>J7 WEB INSTALLER</h1>
+    <p>Collega il telefono all'auto via OTG e chiudi le altre app ADB.</p>
+    <button id="connect">1. Connetti auto</button>
+    <input id="apk" type="file" accept=".apk,application/vnd.android.package-archive" disabled>
+    <button id="install" disabled>2. Installa APK</button>
+    <pre id="status">Pronto.</pre>
+  </body>
+</html>
