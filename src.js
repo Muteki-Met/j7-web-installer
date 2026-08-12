@@ -1,4 +1,4 @@
-import { Adb, AdbDaemonTransport } from "@yume-chan/adb";
+import { Adb, AdbDaemonTransport, AdbFeature } from "@yume-chan/adb";
 import AdbWebCredentialStore from "@yume-chan/adb-credential-web";
 import { AdbDaemonWebUsbDeviceManager } from "@yume-chan/adb-daemon-webusb";
 
@@ -26,9 +26,23 @@ connectButton.onclick = async () => {
     const transport = await AdbDaemonTransport.authenticate({
       serial: device.serial,
       connection: await device.connect(),
-      credentialStore: new AdbWebCredentialStore("J7 Web Installer")
+      credentialStore: new AdbWebCredentialStore("J7 Web Installer"),
+      features: [
+        AdbFeature.ShellV2,
+        AdbFeature.Cmd,
+        AdbFeature.StatV2,
+        AdbFeature.ListV2,
+        AdbFeature.FixedPushMkdir,
+        AdbFeature.Abb,
+        AdbFeature.AbbExec,
+        AdbFeature.SendReceiveV2
+      ],
+      initialDelayedAckBytes: 0
     });
     adb = new Adb(transport);
+    show("ADB authenticated. Testing legacy shell…");
+    const probe = await shell("echo J7_READY");
+    if (!probe.includes("J7_READY")) throw new Error(`Legacy shell test failed: ${probe || "no output"}`);
     apkInput.disabled = false;
     connectButton.disabled = true;
     show(`Connected: ${device.name || device.serial}`);
