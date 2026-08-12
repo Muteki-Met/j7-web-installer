@@ -5,7 +5,7 @@ const connectButton = document.querySelector("#connect");
 const apkInput = document.querySelector("#apk");
 const installButton = document.querySelector("#install");
 const status = document.querySelector("#status");
-const VERSION = "v0.8.0";
+const VERSION = "v0.9.0";
 document.querySelector("#version").textContent = VERSION;
 status.textContent = `Ready.\nBuild ${VERSION}`;
 let adb;
@@ -37,12 +37,23 @@ installButton.onclick = async () => {
   const file = apkInput.files?.[0];
   if (!adb || !file) return;
   installButton.disabled = true;
+  const remote = "/sdcard/Download/j7-web-installer.apk";
   try {
-    show(`Installing ${file.name} with ADB 0.0.9…`);
-    await adb.install(await file.arrayBuffer(), uploaded => {
-      show(`Uploading ${file.name}… ${Math.min(100, Math.round(uploaded / file.size * 100))}%`);
-    });
-    show("SUCCESS: APK installed.");
+    show(`Uploading ${file.name} through shell…`);
+    const upload = await adb.childProcess.spawn(`cat > ${remote}`, { shellProtocol: "disable" });
+    await upload.write(await file.arrayBuffer());
+    await upload.kill();
+
+    const uploadedSize = await adb.childProcess.exec("stat", `-c%s ${remote}`);
+    if (Number(uploadedSize.trim()) !== file.size) {
+      throw new Error(`Upload verification failed: ${uploadedSize.trim()} / ${file.size} bytes`);
+    }
+
+    show(`Upload verified (${file.size} bytes). Installing…`);
+    const result = await adb.childProcess.exec("pm", `install -r ${remote}`);
+    if (!result.includes("Success")) throw new Error(result.trim() || "Package Manager returned no result");
+    await adb.childProcess.exec("rm", remote);
+    show(`SUCCESS: APK installed.\n${result.trim()}`);
   } catch (error) {
     show(`INSTALLATION FAILED:\n${error?.stack || error}`);
   } finally {
