@@ -37,7 +37,9 @@ connectButton.onclick = async () => {
         AdbFeature.AbbExec,
         AdbFeature.SendReceiveV2
       ],
-      initialDelayedAckBytes: 0
+      initialDelayedAckBytes: 0,
+      appendNullToServiceString: true,
+      calculateChecksum: true
     });
     adb = new Adb(transport);
     show("ADB authenticated. Testing legacy shell…");
