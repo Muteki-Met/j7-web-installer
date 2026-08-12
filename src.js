@@ -37,9 +37,9 @@ installButton.onclick = async () => {
   const file = apkInput.files?.[0];
   if (!adb || !file) return;
   installButton.disabled = true;
-  show(`Installing ${file.name}…`);
+  show(`Uploading ${file.name}…\nThe installer will then run pm install.`);
   try {
-    await new PackageManager(adb).installStream(file.size, file.stream(), { allowTest: true });
+    await new PackageManager(adb).pushAndInstallStream(file.stream(), { allowTest: true });
     show("SUCCESS: APK installed.");
   } catch (error) {
     show(`INSTALLATION FAILED:\n${error?.stack || error}`);
