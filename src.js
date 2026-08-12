@@ -1,7 +1,6 @@
 import { Adb, AdbDaemonTransport } from "@yume-chan/adb";
 import AdbWebCredentialStore from "@yume-chan/adb-credential-web";
 import { AdbDaemonWebUsbDeviceManager } from "@yume-chan/adb-daemon-webusb";
-import { PackageManager } from "@yume-chan/android-bin";
 
 const connectButton = document.querySelector("#connect");
 const apkInput = document.querySelector("#apk");
@@ -10,6 +9,13 @@ const status = document.querySelector("#status");
 let adb;
 
 const show = (message) => status.textContent = message;
+
+const shell = async (command, input) => {
+  const socket = await adb.createSocket(`shell:${command}`);
+  const output = new Response(socket.readable).text();
+  if (input) await input.pipeTo(socket.writable);
+  return (await output).trim();
+};
 
 connectButton.onclick = async () => {
   try {
@@ -37,13 +43,24 @@ installButton.onclick = async () => {
   const file = apkInput.files?.[0];
   if (!adb || !file) return;
   installButton.disabled = true;
-  show(`Uploading ${file.name}…\nThe installer will then run pm install.`);
+  const remote = "/data/local/tmp/j7-installer.apk";
   try {
-    await new PackageManager(adb).pushAndInstallStream(file.stream(), { allowTest: true });
+    show(`Uploading ${file.name} via legacy ADB shell…`);
+    await shell(`cat > ${remote}`, file.stream());
+  } catch (error) {
+    show(`UPLOAD FAILED:\n${error?.stack || error}`);
+    installButton.disabled = false;
+    return;
+  }
+  try {
+    show("Upload complete. Running pm install…");
+    const output = await shell(`pm install -r -t ${remote}`);
+    if (!output.includes("Success")) throw new Error(output || "pm install returned no output");
     show("SUCCESS: APK installed.");
   } catch (error) {
-    show(`INSTALLATION FAILED:\n${error?.stack || error}`);
+    show(`PM INSTALL FAILED:\n${error?.stack || error}`);
   } finally {
+    try { await shell(`rm -f ${remote}`); } catch {}
     installButton.disabled = false;
   }
 };
