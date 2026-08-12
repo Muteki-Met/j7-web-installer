@@ -5,7 +5,7 @@ const connectButton = document.querySelector("#connect");
 const apkInput = document.querySelector("#apk");
 const installButton = document.querySelector("#install");
 const status = document.querySelector("#status");
-const VERSION = "v0.9.0";
+const VERSION = "v0.10.0";
 document.querySelector("#version").textContent = VERSION;
 status.textContent = `Ready.\nBuild ${VERSION}`;
 let adb;
@@ -38,24 +38,41 @@ installButton.onclick = async () => {
   if (!adb || !file) return;
   installButton.disabled = true;
   const remote = "/sdcard/Download/j7-web-installer.apk";
+  const encoded = `${remote}.b64`;
+  let phase = "preparing upload";
   try {
-    show(`Uploading ${file.name} through shell…`);
-    const upload = await adb.childProcess.spawn(`cat > ${remote}`, { shellProtocol: "disable" });
-    await upload.write(await file.arrayBuffer());
-    await upload.kill();
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(",")[1]);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
 
+    phase = "clearing temporary files";
+    await adb.childProcess.exec("rm", `-f ${remote} ${encoded}`);
+    for (let offset = 0; offset < base64.length; offset += 2000) {
+      phase = `uploading block ${Math.floor(offset / 2000) + 1}/${Math.ceil(base64.length / 2000)}`;
+      show(`${phase}…`);
+      await adb.childProcess.exec("echo", `-n '${base64.slice(offset, offset + 2000)}' >> ${encoded}`);
+    }
+
+    phase = "decoding APK";
+    await adb.childProcess.exec("base64", `-d ${encoded} > ${remote}`);
+
+    phase = "verifying upload";
     const uploadedSize = await adb.childProcess.exec("stat", `-c%s ${remote}`);
     if (Number(uploadedSize.trim()) !== file.size) {
       throw new Error(`Upload verification failed: ${uploadedSize.trim()} / ${file.size} bytes`);
     }
 
+    phase = "running Package Manager";
     show(`Upload verified (${file.size} bytes). Installing…`);
     const result = await adb.childProcess.exec("pm", `install -r ${remote}`);
     if (!result.includes("Success")) throw new Error(result.trim() || "Package Manager returned no result");
-    await adb.childProcess.exec("rm", remote);
+    await adb.childProcess.exec("rm", `-f ${remote} ${encoded}`);
     show(`SUCCESS: APK installed.\n${result.trim()}`);
   } catch (error) {
-    show(`INSTALLATION FAILED:\n${error?.stack || error}`);
+    show(`INSTALLATION FAILED DURING ${phase.toUpperCase()}:\n${error?.stack || error}`);
   } finally {
     installButton.disabled = false;
   }
