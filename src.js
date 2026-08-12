@@ -6,6 +6,9 @@ const connectButton = document.querySelector("#connect");
 const apkInput = document.querySelector("#apk");
 const installButton = document.querySelector("#install");
 const status = document.querySelector("#status");
+const VERSION = "v0.7.0";
+document.querySelector("#version").textContent = VERSION;
+status.textContent = `Ready.\nBuild ${VERSION}`;
 let adb;
 
 const show = (message) => status.textContent = message;
