@@ -5,7 +5,7 @@ const connectButton = document.querySelector("#connect");
 const apkInput = document.querySelector("#apk");
 const installButton = document.querySelector("#install");
 const status = document.querySelector("#status");
-const VERSION = "v0.10.0";
+const VERSION = "v0.11.0";
 document.querySelector("#version").textContent = VERSION;
 status.textContent = `Ready.\nBuild ${VERSION}`;
 let adb;
@@ -20,12 +20,9 @@ connectButton.onclick = async () => {
     show("Allow USB debugging on the car display…");
     adb = new Adb(backend);
     await adb.connect(new AdbWebCredentialStore("j7-web-installer-key"));
-    show("ADB 0.0.9 authenticated. Testing shell…");
-    const probe = await adb.childProcess.exec("echo", "J7_READY");
-    if (!probe.includes("J7_READY")) throw new Error(`Legacy shell test failed: ${probe || "no output"}`);
     apkInput.disabled = false;
     connectButton.disabled = true;
-    show(`Connected: ${adb.model || adb.name || backend.serial}\nEngine ${VERSION} / ADB 0.0.9`);
+    show(`Connected: ${adb.model || adb.name || backend.serial}\nEngine ${VERSION} / ADB 0.0.8`);
   } catch (error) {
     show(`CONNECTION FAILED:\n${error?.stack || error}`);
   }
