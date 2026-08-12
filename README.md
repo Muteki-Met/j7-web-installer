@@ -1,16 +1,16 @@
 # J7 Web Installer
 
-Installer APK minimale per infotainment Android tramite ADB su WebUSB.
+Minimal APK installer for Android infotainment systems using ADB over WebUSB.
 
-## Uso
+## Usage
 
-1. Aprire la pagina con Chrome su Android.
-2. Collegare telefono e auto tramite adattatore OTG.
-3. Chiudere qualsiasi altra applicazione ADB.
-4. Premere **Connetti auto** e autorizzare il debug USB sull'auto.
-5. Selezionare un singolo APK e premere **Installa APK**.
+1. Open the page in Chrome on Android.
+2. Connect the phone to the car using a USB OTG adapter.
+3. Close any other ADB application.
+4. Press **Connect to car** and allow USB debugging on the car.
+5. Select one APK and press **Install APK**.
 
-Il file viene trasferito direttamente dal browser all'auto. Nessun dato viene caricato su un server.
+The file is transferred directly from the browser to the car. No data is uploaded to a server.
 
 ## Build
 
@@ -19,4 +19,4 @@ npm install
 npm run build
 ```
 
-La build statica viene generata in `dist/`.
+The static build is generated in `dist/`.
